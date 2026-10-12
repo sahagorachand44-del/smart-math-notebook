@@ -1,3 +1,5 @@
+import os
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -5,9 +7,17 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle, Line
 from kivy.core.window import Window
+from kivy.utils import platform
 
-# Mobile preview window size on PC
-Window.size = (360, 640)
+# Mobile preview window size on PC only (Android-e eta lagbe na)
+if platform not in ('android', 'ios'):
+    Window.size = (360, 640)
+
+# --- Font setup ---
+# DejaVuSans.ttf ta main.py-r pashe rakho (superscript/subscript/symbol er jonno)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_font_path = os.path.join(BASE_DIR, 'DejaVuSans.ttf')
+FONT = _font_path if os.path.exists(_font_path) else 'Roboto'
 
 # --- Comprehensive Class 7 to 10 Formula Database ---
 MATH_DATABASE = {
@@ -47,35 +57,38 @@ MATH_DATABASE = {
     }
 }
 
+
 class NotebookWidget(BoxLayout):
-    def _init_(self, **kwargs):
-        super(NotebookWidget, self)._init_(**kwargs)
+    def __init__(self, **kwargs):
+        super(NotebookWidget, self).__init__(**kwargs)
         self.orientation = 'vertical'
-        
+
         # Notebook Paper Background & Rules Drawing
         with self.canvas.before:
-            Color(0.98, 0.96, 0.90, 1) # Cream paper color
+            Color(0.98, 0.96, 0.90, 1)  # Cream paper color
             self.bg = Rectangle(pos=self.pos, size=self.size)
-            
-            # Red Margin Line (Bamer lal dag)
+
+            # Red Margin Line (bamer lal dag)
             Color(0.9, 0.3, 0.3, 1)
             self.margin_line = Line(points=[35, 0, 35, 3000], width=1.5)
-            
-            # Blue Ruled Lines (Kagojer horizontal lines)
+
+            # Blue Ruled Lines (kagojer horizontal lines)
             Color(0.7, 0.8, 0.9, 0.4)
             self.ruled_lines = []
             for y in range(0, 3000, 30):
-                l = Line(points=[0, y, 3000, y], width=1)
-                self.ruled_lines.append(l)
-                
+                ln = Line(points=[0, y, 3000, y], width=1)
+                self.ruled_lines.append(ln)
+
         self.bind(pos=self.update_canvas, size=self.update_canvas)
-        
+
     def update_canvas(self, *args):
         self.bg.pos = self.pos
         self.bg.size = self.size
 
+
 class MathApp(App):
     def build(self):
+        self.title = 'Smart Math Notebook'
         self.root_layout = NotebookWidget()
         self.show_main_menu()
         return self.root_layout
@@ -86,12 +99,13 @@ class MathApp(App):
     def show_main_menu(self):
         self.clear_screen()
         main_box = BoxLayout(orientation='vertical', padding=[45, 20, 20, 20], spacing=15)
-        
+
         # Title
         title = Label(
-            text='[b]📐 Smart Math Notebook[/b]\n[i]Class 7 to 10 Complete Formulas[/i]',
+            text='[b]Smart Math Notebook[/b]\n[i]Class 7 to 10 Complete Formulas[/i]',
             markup=True, font_size=18, color=(0.1, 0.2, 0.5, 1),
-            size_hint_y=None, height=70, halign='center', valign='middle'
+            size_hint_y=None, height=70, halign='center', valign='middle',
+            font_name=FONT
         )
         title.bind(size=title.setter('text_size'))
         main_box.add_widget(title)
@@ -103,7 +117,7 @@ class MathApp(App):
         for level in MATH_DATABASE.keys():
             btn = Button(
                 text=level, font_size=15, size_hint_y=None, height=60,
-                background_color=(0.2, 0.4, 0.7, 1)
+                background_color=(0.2, 0.4, 0.7, 1), font_name=FONT
             )
             btn.bind(on_press=lambda x, lvl=level: self.show_sub_menu(lvl))
             box.add_widget(btn)
@@ -117,8 +131,8 @@ class MathApp(App):
         main_box = BoxLayout(orientation='vertical', padding=[45, 20, 20, 20], spacing=15)
 
         back_btn = Button(
-            text='⬅️ Back to Main Menu', size_hint_y=None, height=45,
-            background_color=(0.8, 0.3, 0.3, 1)
+            text='<  Back to Main Menu', size_hint_y=None, height=45,
+            background_color=(0.8, 0.3, 0.3, 1), font_name=FONT
         )
         back_btn.bind(on_press=lambda x: self.show_main_menu())
         main_box.add_widget(back_btn)
@@ -128,13 +142,18 @@ class MathApp(App):
         box.bind(minimum_height=box.setter('height'))
 
         for branch in MATH_DATABASE[level_name].keys():
-            lbl = Label(text=f'[b]-- {branch} --[/b]', markup=True, font_size=16, color=(0.2, 0.2, 0.2, 1), size_hint_y=None, height=40)
+            # branch naam e markup lagbe na, tai plain text
+            lbl = Label(
+                text='-- {} --'.format(branch), markup=False, font_size=16,
+                color=(0.2, 0.2, 0.2, 1), size_hint_y=None, height=40,
+                font_name=FONT
+            )
             box.add_widget(lbl)
 
             for title, formula in MATH_DATABASE[level_name][branch]:
                 btn = Button(
                     text=title, font_size=14, size_hint_y=None, height=50,
-                    background_color=(0.3, 0.6, 0.4, 1)
+                    background_color=(0.3, 0.6, 0.4, 1), font_name=FONT
                 )
                 btn.bind(on_press=lambda x, t=title, f=formula: self.show_formula_detail(t, f, level_name))
                 box.add_widget(btn)
@@ -148,32 +167,34 @@ class MathApp(App):
         main_box = BoxLayout(orientation='vertical', padding=[45, 20, 20, 20], spacing=20)
 
         back_btn = Button(
-            text='⬅️ Back', size_hint_y=None, height=45,
-            background_color=(0.8, 0.3, 0.3, 1)
+            text='<  Back', size_hint_y=None, height=45,
+            background_color=(0.8, 0.3, 0.3, 1), font_name=FONT
         )
         back_btn.bind(on_press=lambda x: self.show_sub_menu(level_name))
         main_box.add_widget(back_btn)
 
         detail_layout = BoxLayout(orientation='vertical', spacing=10)
-        
+
         lbl_title = Label(
-            text=f'[b]{title}[/b]', markup=True, font_size=18,
+            text=title, markup=False, font_size=18,
             color=(0.1, 0.2, 0.5, 1), size_hint_y=None, height=40,
-            halign='left', valign='middle'
+            halign='left', valign='middle', font_name=FONT
         )
         lbl_title.bind(size=lbl_title.setter('text_size'))
         detail_layout.add_widget(lbl_title)
 
+        # markup=False zoruri: formula te [ ] ache (jemon [-b ± ...])
         lbl_formula = Label(
-            text=formula, markup=True, font_size=16,
+            text=formula, markup=False, font_size=16,
             color=(0.1, 0.1, 0.1, 1),
-            halign='left', valign='top'
+            halign='left', valign='top', font_name=FONT
         )
         lbl_formula.bind(size=lbl_formula.setter('text_size'))
         detail_layout.add_widget(lbl_formula)
 
         main_box.add_widget(detail_layout)
         self.root_layout.add_widget(main_box)
+
 
 if __name__ == '__main__':
     MathApp().run()
