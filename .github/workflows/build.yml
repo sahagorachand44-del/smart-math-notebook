@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,12 +17,26 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev libgdbm-dev libssl-dev libffi-dev build-essential gettext libjpeg-dev
-        pip install --upgrade pip setuptools
-        pip install "Cython==0.29.33" buildozer
+        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip \
+          autoconf automake libtool pkg-config zlib1g-dev \
+          libncurses5-dev libncursesw5-dev libtinfo5 cmake \
+          libffi-dev libssl-dev build-essential gettext libltdl-dev
+
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip "setuptools<70" wheel
+        pip install "Cython==0.29.36" "buildozer==1.5.0" virtualenv
+
+    - name: Cache Buildozer
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.buildozer
+          .buildozer
+        key: buildozer-${{ hashFiles('buildozer.spec') }}
 
     - name: Build with Buildozer
       run: |
