@@ -21,7 +21,7 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev libgdbm-dev libssl-dev libffi-dev build-essential gettext libjpeg-dev
         pip install --upgrade pip setuptools
-        pip install "cython<3.0.0" buildozer
+        pip install "Cython==0.29.33" buildozer
 
     - name: Build with Buildozer
       run: |
